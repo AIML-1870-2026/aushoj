@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfield Particle System</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+        }
+        #canvas {
+            display: block;
+        }
+        #controls {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            display: none;
+        }
+        #controls input {
+            margin: 5px;
+        }
+        #settingsBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <button id="settingsBtn">⚙️</button>
+    <div id="controls">
+        <label for="emissionRate">Emission Rate: <span id="emissionRateValue">10</span></label>
+        <input type="range" id="emissionRate" min="1" max="50" value="10">
+        <br>
+        <label for="speed">Speed: <span id="speedValue">2</span></label>
+        <input type="range" id="speed" min="0.1" max="5" step="0.1" value="2">
+        <br>
+        <label for="trailLength">Trail Length: <span id="trailLengthValue">20</span></label>
+        <input type="range" id="trailLength" min="5" max="50" value="20">
+        <br>
+        <label for="starSize">Star Size: <span id="starSizeValue">4</span></label>
+        <input type="range" id="starSize" min="1" max="5" value="4">
+    </div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        let lastTime = 0;
+        let emissionTimer = 0;
+
+        const emissionRateSlider = document.getElementById('emissionRate');
+        const speedSlider = document.getElementById('speed');
+        const trailLengthSlider = document.getElementById('trailLength');
+        const starSizeSlider = document.getElementById('starSize');
+
+        const emissionRateValue = document.getElementById('emissionRateValue');
+        const speedValue = document.getElementById('speedValue');
+        const trailLengthValue = document.getElementById('trailLengthValue');
+        const starSizeValue = document.getElementById('starSizeValue');
+
+        emissionRateSlider.addEventListener('input', () => emissionRateValue.textContent = emissionRateSlider.value);
+        speedSlider.addEventListener('input', () => speedValue.textContent = speedSlider.value);
+        trailLengthSlider.addEventListener('input', () => trailLengthValue.textContent = trailLengthSlider.value);
+        starSizeSlider.addEventListener('input', () => starSizeValue.textContent = starSizeSlider.value);
+
+        const settingsBtn = document.getElementById('settingsBtn');
+        const controls = document.getElementById('controls');
+        settingsBtn.addEventListener('click', () => {
+            if (controls.style.display === 'none' || controls.style.display === '') {
+                controls.style.display = 'block';
+            } else {
+                controls.style.display = 'none';
+            }
+        });
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const emissionRadius = 100; // Larger emission area
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * emissionRadius;
+                this.x = centerX + Math.cos(angle) * distance;
+                this.y = centerY + Math.sin(angle) * distance;
+                const speed = parseFloat(speedSlider.value);
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.life = 0;
+                this.trail = [];
+            }
+
+            update(deltaTime) {
+                this.x += this.vx * deltaTime;
+                this.y += this.vy * deltaTime;
+                this.life += deltaTime;
+                this.trail.push({x: this.x, y: this.y});
+                const maxTrail = parseInt(trailLengthSlider.value);
+                if (this.trail.length > maxTrail) {
+                    this.trail.shift();
+                }
+                // Reset if off screen
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                if (this.trail.length < 1) return;
+                ctx.save();
+                const size = parseInt(starSizeSlider.value);
+                for (let i = 0; i < this.trail.length; i++) {
+                    const isHead = i === this.trail.length - 1;
+                    const alpha = isHead ? 1 : (i + 1) / this.trail.length * 0.4; // Head fully visible, trails faint
+                    ctx.globalAlpha = alpha;
+                    let color = 'rgba(255, 255, 255, 1)'; // White for head
+                    if (!isHead) {
+                        const ratio = i / (this.trail.length - 1);
+                        const r = Math.floor(255 * ratio);
+                        const g = 0;
+                        const b = Math.floor(255 * (1 - ratio));
+                        color = `rgba(${r}, ${g}, ${b}, 1)`;
+                    }
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(this.trail[i].x, this.trail[i].y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        function animate(currentTime) {
+            const deltaTime = (currentTime - lastTime) / 16.67; // Normalize to ~60fps
+            lastTime = currentTime;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Emit particles
+            emissionTimer += deltaTime;
+            const emissionRate = parseInt(emissionRateSlider.value);
+            if (emissionTimer >= 60 / emissionRate) { // Emit based on rate per second
+                particles.push(new Particle());
+                emissionTimer = 0;
+            }
+
+            // Update and draw particles
+            particles.forEach(particle => {
+                particle.update(deltaTime);
+                particle.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        for (let i = 0; i < 50; i++) {
+            particles.push(new Particle());
+        }
+
+        requestAnimationFrame(animate);
+
+        // Resize canvas
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>

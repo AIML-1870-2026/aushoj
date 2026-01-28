@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a12;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .panel {
+            position: fixed;
+            background: linear-gradient(135deg, rgba(15, 15, 25, 0.95), rgba(25, 25, 40, 0.9));
+            border: 1px solid rgba(120, 180, 255, 0.15);
+            border-radius: 12px;
+            color: #e0e8ff;
+            font-size: 13px;
+            backdrop-filter: blur(12px);
+        }
+
+        .settings-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, rgba(15, 15, 25, 0.95), rgba(25, 25, 40, 0.9));
+            border: 1px solid rgba(120, 180, 255, 0.15);
+            border-radius: 10px;
+            color: #e0e8ff;
+            padding: 0;
+            font-size: 40px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        .settings-btn:hover {
+            background: linear-gradient(135deg, rgba(25, 25, 40, 0.95), rgba(35, 35, 55, 0.9));
+            border-color: rgba(120, 180, 255, 0.3);
+            box-shadow: 0 0 15px rgba(110, 240, 255, 0.2);
+        }
+
+        .controls-panel {
+            top: 70px;
+            left: 20px;
+            padding: 20px;
+            width: 280px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            display: none;
+        }
+
+        .controls-panel.visible {
+            display: block;
+        }
+
+        .controls-panel h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls-panel h2::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #6ef0ff, #4080ff);
+            border-radius: 50%;
+            box-shadow: 0 0 10px #6ef0ff;
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #a0b0d0;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group label span {
+            color: #6ef0ff;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            background: rgba(100, 150, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #6ef0ff, #4080ff);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(110, 240, 255, 0.5);
+            transition: transform 0.15s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .stats-panel {
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            min-width: 180px;
+        }
+
+        .stats-panel h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #708090;
+            margin-bottom: 12px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #8090a0;
+        }
+
+        .stat-value {
+            color: #6ef0ff;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .density-bar {
+            margin-top: 12px;
+            height: 4px;
+            background: rgba(100, 150, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .density-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4080ff, #6ef0ff);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            .controls-panel {
+                width: calc(100% - 40px);
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <button class="settings-btn" id="settingsBtn">⚙</button>
+
+    <div class="panel controls-panel" id="controlsPanel">
+        <h2>Stellar Web</h2>
+
+        <div class="control-group">
+            <label>Nodes <span id="nodeCountVal">80</span></label>
+            <input type="range" id="nodeCount" min="20" max="200" value="80">
+        </div>
+
+        <div class="control-group">
+            <label>Connection Radius <span id="radiusVal">180</span></label>
+            <input type="range" id="radius" min="50" max="350" value="180">
+        </div>
+
+        <div class="control-group">
+            <label>Drift Speed <span id="speedVal">0.8</span></label>
+            <input type="range" id="speed" min="0.1" max="3" step="0.1" value="0.8">
+        </div>
+
+        <div class="control-group">
+            <label>Node Size <span id="nodeSizeVal">4</span></label>
+            <input type="range" id="nodeSize" min="1" max="10" step="0.5" value="4">
+        </div>
+
+        <div class="control-group">
+            <label>Edge Thickness <span id="thicknessVal">1.5</span></label>
+            <input type="range" id="thickness" min="0.5" max="4" step="0.25" value="1.5">
+        </div>
+
+        <div class="control-group">
+            <label>Edge Opacity <span id="edgeOpacityVal">0.6</span></label>
+            <input type="range" id="edgeOpacity" min="0.1" max="1" step="0.05" value="0.6">
+        </div>
+
+        <div class="control-group">
+            <label>Depth Range <span id="depthVal">600</span></label>
+            <input type="range" id="depth" min="100" max="1000" step="50" value="600">
+        </div>
+    </div>
+
+    <div class="panel stats-panel">
+        <h3>Network Stats</h3>
+        <div class="stat-row">
+            <span class="stat-label">Nodes</span>
+            <span class="stat-value" id="statNodes">80</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Edges</span>
+            <span class="stat-value" id="statEdges">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Avg Links</span>
+            <span class="stat-value" id="statAvg">0.0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Density</span>
+            <span class="stat-value" id="statDensity">0%</span>
+        </div>
+        <div class="density-bar">
+            <div class="density-fill" id="densityBar"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        let config = {
+            nodeCount: 80,
+            radius: 180,
+            speed: 0.8,
+            nodeSize: 4,
+            thickness: 1.5,
+            edgeOpacity: 0.6,
+            depthRange: 600
+        };
+
+        let nodes = [];
+        let mouseX = null;
+        let mouseY = null;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Node {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.z = (Math.random() - 0.5) * config.depthRange;
+
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.3 + Math.random() * 0.7;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.vz = (Math.random() - 0.5) * 0.5;
+            }
+
+            update() {
+                // Apply velocity
+                this.x += this.vx * config.speed;
+                this.y += this.vy * config.speed;
+                this.z += this.vz * config.speed;
+
+                // Mouse attraction
+                if (mouseX !== null && mouseY !== null) {
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 200 && dist > 0) {
+                        const force = (200 - dist) / 200 * 0.02;
+                        this.vx += (dx / dist) * force;
+                        this.vy += (dy / dist) * force;
+                    }
+                }
+
+                // Damping
+                this.vx *= 0.999;
+                this.vy *= 0.999;
+
+                // Boundary wrapping
+                const margin = 50;
+                if (this.x < -margin) this.x = canvas.width + margin;
+                if (this.x > canvas.width + margin) this.x = -margin;
+                if (this.y < -margin) this.y = canvas.height + margin;
+                if (this.y > canvas.height + margin) this.y = -margin;
+
+                // Depth bouncing
+                const halfDepth = config.depthRange / 2;
+                if (this.z < -halfDepth || this.z > halfDepth) {
+                    this.vz *= -1;
+                    this.z = Math.max(-halfDepth, Math.min(halfDepth, this.z));
+                }
+            }
+
+            getScreenProps() {
+                const halfDepth = config.depthRange / 2;
+                const normalizedZ = (this.z + halfDepth) / config.depthRange; // 0 to 1
+                const scale = 0.5 + normalizedZ * 0.8;
+                const alpha = 0.3 + normalizedZ * 0.7;
+                return { scale, alpha, normalizedZ };
+            }
+
+            draw() {
+                const { scale, alpha, normalizedZ } = this.getScreenProps();
+                const size = config.nodeSize * scale;
+
+                // Color based on depth (cyan to purple gradient)
+                const hue = 180 + normalizedZ * 80;
+                const color = `hsla(${hue}, 80%, 65%, ${alpha})`;
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                // Glow effect
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, size * 3);
+                gradient.addColorStop(0, `hsla(${hue}, 80%, 70%, ${alpha * 0.4})`);
+                gradient.addColorStop(1, 'transparent');
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, size * 3, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+        }
+
+        function initNodes() {
+            nodes = [];
+            for (let i = 0; i < config.nodeCount; i++) {
+                nodes.push(new Node());
+            }
+        }
+
+        function drawEdges() {
+            let edgeCount = 0;
+
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const n1 = nodes[i];
+                    const n2 = nodes[j];
+
+                    const dx = n1.x - n2.x;
+                    const dy = n1.y - n2.y;
+                    const dz = n1.z - n2.z;
+                    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                    if (dist < config.radius) {
+                        edgeCount++;
+                        const strength = 1 - dist / config.radius;
+
+                        // Average depth for edge color
+                        const avgZ = (n1.z + n2.z) / 2;
+                        const halfDepth = config.depthRange / 2;
+                        const normalizedZ = (avgZ + halfDepth) / config.depthRange;
+                        const hue = 180 + normalizedZ * 80;
+
+                        const alpha = strength * config.edgeOpacity * (0.4 + normalizedZ * 0.6);
+
+                        ctx.beginPath();
+                        ctx.moveTo(n1.x, n1.y);
+                        ctx.lineTo(n2.x, n2.y);
+                        ctx.strokeStyle = `hsla(${hue}, 70%, 60%, ${alpha})`;
+                        ctx.lineWidth = config.thickness * strength;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            return edgeCount;
+        }
+
+        function updateStats(edgeCount) {
+            const maxEdges = (nodes.length * (nodes.length - 1)) / 2;
+            const density = maxEdges > 0 ? (edgeCount / maxEdges) * 100 : 0;
+            const avgLinks = nodes.length > 0 ? (edgeCount * 2) / nodes.length : 0;
+
+            document.getElementById('statNodes').textContent = nodes.length;
+            document.getElementById('statEdges').textContent = edgeCount;
+            document.getElementById('statAvg').textContent = avgLinks.toFixed(1);
+            document.getElementById('statDensity').textContent = density.toFixed(1) + '%';
+            document.getElementById('densityBar').style.width = Math.min(density * 2, 100) + '%';
+        }
+
+        function drawBackground() {
+            // Deep space gradient
+            const gradient = ctx.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, 0,
+                canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) * 0.8
+            );
+            gradient.addColorStop(0, '#0d0d1a');
+            gradient.addColorStop(0.5, '#080812');
+            gradient.addColorStop(1, '#050508');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function animate() {
+            drawBackground();
+
+            // Update and draw nodes
+            nodes.forEach(node => node.update());
+
+            // Draw edges first (behind nodes)
+            const edgeCount = drawEdges();
+
+            // Draw nodes on top
+            // Sort by z for proper depth ordering
+            const sortedNodes = [...nodes].sort((a, b) => a.z - b.z);
+            sortedNodes.forEach(node => node.draw());
+
+            updateStats(edgeCount);
+
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        window.addEventListener('resize', resize);
+
+        canvas.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            mouseX = null;
+            mouseY = null;
+        });
+
+        // Control bindings
+        function bindControl(id, configKey, parser = parseFloat, formatter = v => v) {
+            const input = document.getElementById(id);
+            const display = document.getElementById(id + 'Val');
+
+            input.addEventListener('input', e => {
+                const value = parser(e.target.value);
+                config[configKey] = value;
+                if (display) display.textContent = formatter(value);
+
+                if (configKey === 'nodeCount') {
+                    adjustNodeCount();
+                }
+            });
+        }
+
+        function adjustNodeCount() {
+            while (nodes.length < config.nodeCount) {
+                nodes.push(new Node());
+            }
+            while (nodes.length > config.nodeCount) {
+                nodes.pop();
+            }
+        }
+
+        bindControl('nodeCount', 'nodeCount', parseInt);
+        bindControl('radius', 'radius', parseInt);
+        bindControl('speed', 'speed', parseFloat);
+        bindControl('nodeSize', 'nodeSize', parseFloat);
+        bindControl('thickness', 'thickness', parseFloat);
+        bindControl('edgeOpacity', 'edgeOpacity', parseFloat);
+        bindControl('depth', 'depthRange', parseInt);
+
+        // Settings toggle
+        const settingsBtn = document.getElementById('settingsBtn');
+        const controlsPanel = document.getElementById('controlsPanel');
+
+        settingsBtn.addEventListener('click', () => {
+            controlsPanel.classList.toggle('visible');
+            settingsBtn.textContent = controlsPanel.classList.contains('visible') ? '✕' : '⚙';
+        });
+
+        // Initialize
+        resize();
+        initNodes();
+        animate();
+    </script>
+</body>
+</html>
