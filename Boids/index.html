@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boids Mini-Lab</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header id="header">
+        <h1>Boids Mini-Lab</h1>
+        <div class="header-controls">
+            <div class="theme-select-wrapper" title="Change visual theme">
+                <label for="themeSelect">Theme</label>
+                <select id="themeSelect">
+                    <option value="minimal">Minimal</option>
+                    <option value="neon">Neon</option>
+                    <option value="nature">Nature</option>
+                </select>
+            </div>
+            <button id="pauseBtn" title="Pause or resume the simulation">Pause</button>
+            <button id="resetBtn" title="Randomize all boid positions and velocities">Reset</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="canvas-container">
+            <canvas id="boidsCanvas" width="1200" height="700"></canvas>
+            <div id="canvas-hint">Click to place obstacles (when obstacle mode is on)</div>
+        </div>
+
+        <div id="bottom-panel">
+            <div id="controls-panel">
+                <h2>Controls</h2>
+
+                <div class="sliders-section">
+                    <div class="slider-group" title="How strongly boids avoid crowding neighbors">
+                        <label for="separationSlider">Separation</label>
+                        <input type="range" id="separationSlider" min="0" max="3" step="0.1" value="1.5">
+                        <span class="slider-value" id="separationValue">1.5</span>
+                    </div>
+
+                    <div class="slider-group" title="How strongly boids match their neighbors' direction">
+                        <label for="alignmentSlider">Alignment</label>
+                        <input type="range" id="alignmentSlider" min="0" max="3" step="0.1" value="1.0">
+                        <span class="slider-value" id="alignmentValue">1.0</span>
+                    </div>
+
+                    <div class="slider-group" title="How strongly boids move toward the group center">
+                        <label for="cohesionSlider">Cohesion</label>
+                        <input type="range" id="cohesionSlider" min="0" max="3" step="0.1" value="1.0">
+                        <span class="slider-value" id="cohesionValue">1.0</span>
+                    </div>
+
+                    <div class="slider-group" title="How far a boid can see to detect neighbors">
+                        <label for="radiusSlider">Neighbor Radius</label>
+                        <input type="range" id="radiusSlider" min="20" max="200" step="5" value="50">
+                        <span class="slider-value" id="radiusValue">50</span>
+                    </div>
+
+                    <div class="slider-group" title="Maximum velocity of each boid">
+                        <label for="speedSlider">Max Speed</label>
+                        <input type="range" id="speedSlider" min="1" max="10" step="0.5" value="4">
+                        <span class="slider-value" id="speedValue">4.0</span>
+                    </div>
+                </div>
+
+                <div class="presets-section">
+                    <h3>Presets</h3>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" id="presetSchooling" title="Coordinated, fish-like movement">Schooling</button>
+                        <button class="preset-btn" id="presetChaotic" title="Erratic, insect-like buzzing">Chaotic Swarm</button>
+                        <button class="preset-btn" id="presetCluster" title="Dense flock, slow and cohesive">Tight Cluster</button>
+                    </div>
+                </div>
+
+                <div class="extras-section">
+                    <div class="trail-control">
+                        <label>
+                            <input type="checkbox" id="trailToggle"> Show Trails
+                        </label>
+                        <div class="trail-length-wrapper" id="trailLengthWrapper" style="display:none;">
+                            <label for="trailLengthSlider">Length</label>
+                            <input type="range" id="trailLengthSlider" min="10" max="50" step="1" value="20">
+                            <span class="slider-value" id="trailLengthValue">20</span>
+                        </div>
+                    </div>
+                    <div class="obstacle-controls">
+                        <button id="obstacleToggle" title="Toggle obstacle placement mode">Add Obstacle</button>
+                        <button id="clearObstacles" title="Remove all obstacles from the simulation">Clear All</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="instrumentation-panel">
+                <h2>Instrumentation</h2>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <span class="metric-label">FPS</span>
+                        <span class="metric-value" id="fpsValue">60</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Boids</span>
+                        <span class="metric-value" id="boidCountValue">100</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Avg Speed</span>
+                        <span class="metric-value" id="avgSpeedValue">0.00</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Avg Neighbors</span>
+                        <span class="metric-value" id="avgNeighborsValue">0</span>
+                    </div>
+                </div>
+
+                <div class="system-controls">
+                    <div class="boundary-control">
+                        <label for="boundarySelect">Boundary</label>
+                        <select id="boundarySelect" title="How boids behave at the canvas edges">
+                            <option value="wrap">Wrap</option>
+                            <option value="bounce">Bounce</option>
+                        </select>
+                    </div>
+                    <div class="boid-count-control">
+                        <label for="boidCountInput">Boid Count</label>
+                        <input type="number" id="boidCountInput" min="10" max="2000" value="100" title="Number of boids in the simulation (10-2000)">
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-header">
+                        <label for="chartMetric">Chart</label>
+                        <select id="chartMetric" title="Select which metric to chart over time">
+                            <option value="avgNeighbors">Avg Neighbors</option>
+                            <option value="speedVariance">Speed Variance</option>
+                            <option value="compactness">Flock Compactness</option>
+                        </select>
+                    </div>
+                    <canvas id="chartCanvas" width="300" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="boid.js"></script>
+    <script src="themes.js"></script>
+    <script src="presets.js"></script>
+    <script src="obstacles.js"></script>
+    <script src="instrumentation.js"></script>
+    <script src="chart.js"></script>
+    <script src="simulation.js"></script>
+    <script src="ui-controls.js"></script>
+</body>
+</html>
