@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turing Patterns Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+          <path d="M2 12h20"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>Turing Patterns</h1>
+        <p>Gray-Scott Reaction-Diffusion</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot running"></span>
+        <span class="status-text">Running</span>
+      </div>
+      <div class="fps-pill" id="fpsDisplay">-- FPS</div>
+    </div>
+  </header>
+
+  <div class="app-container">
+
+    <!-- Simulation Canvas -->
+    <div class="canvas-wrapper">
+      <canvas id="simCanvas"></canvas>
+      <div class="canvas-hint" id="canvasHint">Click &amp; drag to paint</div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="controls">
+
+      <!-- Playback bar -->
+      <div class="playback-bar">
+        <button class="icon-btn primary" id="playBtn" title="Pause">
+          <svg id="pauseIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <svg id="playIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+        <button class="icon-btn" id="resetBtn" title="Reset with new seeds">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <button class="icon-btn" id="clearBtn" title="Clear grid">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="playback-divider"></div>
+        <div class="speed-control">
+          <input type="range" id="speedSlider" min="0.5" max="4" step="0.5" value="1">
+          <span class="speed-label" id="speedVal">1x</span>
+        </div>
+      </div>
+
+      <!-- Presets -->
+      <details class="panel" open>
+        <summary>Presets</summary>
+        <div class="panel-body">
+          <div class="preset-grid" id="presetGrid"></div>
+        </div>
+      </details>
+
+      <!-- Parameters -->
+      <details class="panel" open>
+        <summary>Parameters</summary>
+        <div class="panel-body">
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Feed Rate (F)</span>
+              <span class="val" id="feedVal">0.035</span>
+            </div>
+            <input type="range" id="feedSlider" min="0" max="0.1" step="0.001" value="0.035">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Kill Rate (K)</span>
+              <span class="val" id="killVal">0.060</span>
+            </div>
+            <input type="range" id="killSlider" min="0" max="0.1" step="0.001" value="0.06">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Diffusion U</span>
+              <span class="val" id="duVal">0.160</span>
+            </div>
+            <input type="range" id="duSlider" min="0.01" max="0.30" step="0.005" value="0.16">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Diffusion V</span>
+              <span class="val" id="dvVal">0.080</span>
+            </div>
+            <input type="range" id="dvSlider" min="0.01" max="0.30" step="0.005" value="0.08">
+          </div>
+        </div>
+      </details>
+
+      <!-- Color Schemes -->
+      <details class="panel" open>
+        <summary>Color</summary>
+        <div class="panel-body">
+          <div class="color-grid" id="colorGrid"></div>
+        </div>
+      </details>
+
+      <!-- Brush -->
+      <details class="panel" open>
+        <summary>Brush</summary>
+        <div class="panel-body">
+          <div class="seg-control" id="brushToggle">
+            <button class="active" data-chem="V">Inhibitor (V)</button>
+            <button data-chem="U">Activator (U)</button>
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Size</span>
+              <span class="val" id="brushSizeVal">15</span>
+            </div>
+            <input type="range" id="brushSizeSlider" min="5" max="50" step="1" value="15">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Strength</span>
+              <span class="val" id="brushStrVal">1.00</span>
+            </div>
+            <input type="range" id="brushStrSlider" min="0" max="1" step="0.05" value="1">
+          </div>
+        </div>
+      </details>
+
+      <!-- Parameter Space -->
+      <details class="panel">
+        <summary>Parameter Space</summary>
+        <div class="panel-body">
+          <div class="param-map-container">
+            <canvas id="paramMap" width="200" height="200"></canvas>
+          </div>
+          <p class="hint-text">Click to jump to F/K values</p>
+        </div>
+      </details>
+
+      <!-- Export -->
+      <details class="panel">
+        <summary>Export</summary>
+        <div class="panel-body">
+          <div class="export-row">
+            <button class="action-btn" id="saveBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Save PNG
+            </button>
+            <button class="action-btn" id="shareBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Params
+            </button>
+          </div>
+        </div>
+      </details>
+
+      <!-- About -->
+      <details class="panel">
+        <summary>About</summary>
+        <div class="panel-body info-content">
+          <h4>What are Turing Patterns?</h4>
+          <p>In 1952, Alan Turing proposed that simple chemical reactions could explain how
+            biological organisms develop complex patterns. Two substances &mdash; an activator
+            and an inhibitor &mdash; react and diffuse at different rates, creating spots,
+            stripes, and spirals from uniform starting conditions.</p>
+          <h4>The Gray-Scott Model</h4>
+          <p>Substance U is continuously fed at rate <strong>F</strong>, while V is removed at
+            rate <strong>F+K</strong>. U converts to V through their reaction (UV&sup2;). Both
+            diffuse across the grid, but U diffuses faster &mdash; creating the instability
+            that drives pattern formation.</p>
+          <h4>Quick Guide</h4>
+          <p><strong>Low K</strong> &rarr; Spots &amp; isolated features<br>
+            <strong>Mid K</strong> &rarr; Stripes &amp; mazes<br>
+            <strong>High K</strong> &rarr; Waves &amp; spirals<br>
+            <strong>F</strong> controls scale &amp; growth rate</p>
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+  <script src="simulation.js"></script>
+  <script src="renderer.js"></script>
+  <script src="ui.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
