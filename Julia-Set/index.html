@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Julia Set Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="main">
+        <div class="canvas-container" id="canvasContainer">
+            <canvas id="fractalCanvas"></canvas>
+            <div class="canvas-overlay" id="canvasOverlay">
+                <div class="spinner"></div>
+                <span>Rendering...</span>
+            </div>
+
+            <!-- Title top-left -->
+            <div class="title-badge">
+                <span>Julia Set Explorer</span>
+                <button class="help-btn" id="helpBtn" title="Keyboard shortcuts & help">?</button>
+            </div>
+
+            <!-- Zoom top-right -->
+            <div class="zoom-panel">
+                <div class="zoom-badge" id="zoomBadge">Zoom: 1.0x</div>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" id="zoomInBtn" title="Zoom In (+)">+</button>
+                    <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out (-)">−</button>
+                    <button class="zoom-btn reset" id="resetBtn" title="Reset View (Space)">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu toggle arrow -->
+        <button class="menu-toggle" id="menuToggle">
+            <svg class="menu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            <span>Menu</span>
+        </button>
+
+        <!-- Collapsible controls -->
+        <div class="controls collapsed" id="controls">
+            <div class="tabs">
+                <button class="tab active" data-tab="presets">Presets</button>
+                <button class="tab" data-tab="parameters">Parameters</button>
+                <button class="tab" data-tab="appearance">Appearance</button>
+            </div>
+
+            <div class="tab-content active" id="tab-presets">
+                <div class="preset-grid" id="presetGrid"></div>
+            </div>
+
+            <div class="tab-content" id="tab-parameters">
+                <div class="control-group">
+                    <label>Real part (c<sub>r</sub>): <span id="crValue">-0.700</span></label>
+                    <input type="range" id="crSlider" min="-2" max="2" step="0.001" value="-0.7">
+                </div>
+                <div class="control-group">
+                    <label>Imaginary part (c<sub>i</sub>): <span id="ciValue">0.270</span></label>
+                    <input type="range" id="ciSlider" min="-2" max="2" step="0.001" value="0.27">
+                </div>
+                <div class="control-group">
+                    <label>Iteration Depth: <span id="iterValue">256</span></label>
+                    <input type="range" id="iterSlider" min="50" max="1000" step="1" value="256">
+                    <span class="hint">Higher = more detail, slower rendering</span>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-appearance">
+                <div class="control-group">
+                    <label>Fractal Type</label>
+                    <div class="type-toggle">
+                        <button class="type-btn active" data-type="julia">Julia Set</button>
+                        <button class="type-btn" data-type="burningship">Burning Ship</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Color Scheme</label>
+                    <div class="palette-grid" id="paletteGrid"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="help-modal" id="helpModal">
+        <div class="help-content">
+            <button class="help-close" id="helpClose">&times;</button>
+            <h2>Keyboard Shortcuts</h2>
+            <ul>
+                <li><kbd>Space</kbd> Reset view</li>
+                <li><kbd>+</kbd> / <kbd>=</kbd> Zoom in</li>
+                <li><kbd>-</kbd> Zoom out</li>
+                <li><kbd>&uarr;&darr;&larr;&rarr;</kbd> Pan</li>
+                <li><kbd>Click</kbd> Zoom in at point</li>
+                <li><kbd>Shift+Click</kbd> Zoom out at point</li>
+                <li><kbd>Drag</kbd> Pan around</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
