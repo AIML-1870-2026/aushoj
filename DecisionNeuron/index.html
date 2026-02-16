@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Network Decision Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="app-header" role="banner">
+  <h1>Neural Network Decision Visualizer</h1>
+  <div class="scenario-indicator" aria-live="polite">
+    <span class="emoji" id="header-emoji"></span>
+    <span id="header-scenario-title"></span>
+  </div>
+</header>
+
+<!-- Scenario Picker Bar -->
+<nav class="scenario-bar" id="scenario-bar" aria-label="Scenario selection"></nav>
+
+<!-- Main Layout -->
+<main class="app-main">
+
+  <!-- LEFT: Input Panel -->
+  <section class="panel input-panel" aria-label="Input controls">
+    <div class="panel-title">Input Layer</div>
+    <div id="sliders-container"></div>
+
+    <div class="demo-section">
+      <div class="panel-title">Demo Scenarios</div>
+      <div id="demo-buttons" role="group" aria-label="Demo scenario presets"></div>
+    </div>
+
+    <div class="controls-section">
+      <div class="panel-title">Controls</div>
+      <button class="ctrl-btn" id="btn-edit-weights" onclick="toggleEditWeights()" title="Toggle weight editing [E]">Edit Weights</button>
+      <button class="ctrl-btn" id="btn-undo" onclick="undoWeight()" disabled title="Undo weight change [Ctrl+Z]">Undo</button>
+      <button class="ctrl-btn" id="btn-redo" onclick="redoWeight()" disabled title="Redo weight change [Ctrl+Shift+Z]">Redo</button>
+      <button class="ctrl-btn" onclick="resetToProfile()" title="Reset weights to scenario defaults">Reset Weights</button>
+      <button class="ctrl-btn" onclick="randomizeWeights()" title="Randomize all weights">Randomize</button>
+      <button class="ctrl-btn" onclick="resetInputs()" title="Reset all inputs to defaults [R]">Reset Inputs</button>
+      <button class="ctrl-btn" id="btn-pause" onclick="togglePause()" title="Pause/resume signal particles [Space]">Pause Signals</button>
+      <div class="speed-control">
+        <label for="speed-slider">Speed</label>
+        <input type="range" min="0.2" max="3" step="0.1" value="1" id="speed-slider" oninput="setSpeed(this.value)"
+               aria-label="Animation speed" aria-valuemin="0.2" aria-valuemax="3">
+      </div>
+      <div class="keyboard-hints">
+        <span class="hint-key">E</span> Edit Weights
+        <span class="hint-key">R</span> Reset
+        <span class="hint-key">Space</span> Pause
+        <span class="hint-key">Ctrl+Z</span> Undo
+      </div>
+    </div>
+  </section>
+
+  <!-- CENTER: Network Visualization -->
+  <section class="panel network-panel" aria-label="Neural network visualization">
+    <svg id="network-svg" viewBox="0 0 700 440"></svg>
+    <div class="weight-tooltip" id="weight-tooltip" role="tooltip"></div>
+    <div class="weight-editor" id="weight-editor" role="dialog" aria-label="Weight editor">
+      <button class="we-close" onclick="closeWeightEditor()" aria-label="Close weight editor">&times;</button>
+      <div class="we-title" id="we-title">Weight</div>
+      <div class="we-value" id="we-value">0.00</div>
+      <div class="we-controls">
+        <button onclick="adjustWeight(-0.1)" aria-label="Decrease weight by 0.1">&minus;</button>
+        <input type="number" id="we-input" step="0.05" min="-2" max="2" onchange="setWeight(this.value)" aria-label="Weight value">
+        <button onclick="adjustWeight(0.1)" aria-label="Increase weight by 0.1">+</button>
+      </div>
+      <div class="we-hint">Higher weight = stronger influence on decision</div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CENTER: Heatmap -->
+  <section class="panel heatmap-panel" aria-label="Weight heatmap visualization">
+    <div class="panel-title">Weight Heatmap</div>
+    <div class="heatmap-container" id="heatmap-container"></div>
+    <div class="heatmap-legend" aria-label="Heatmap color scale: red means negative, blue means positive">
+      <span>&minus;2.0</span>
+      <div class="legend-bar"></div>
+      <span>+2.0</span>
+    </div>
+  </section>
+
+  <!-- RIGHT: Output + Math Panel -->
+  <section class="panel output-panel" aria-label="Decision output and analysis">
+    <div class="decision-display" id="decision-display">
+      <div class="panel-title">Output Layer</div>
+      <div class="decision-prob" id="decision-prob" aria-live="polite">50<span class="pct">%</span></div>
+      <div class="decision-gauge" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+        <div class="decision-gauge-fill" id="gauge-fill"></div>
+      </div>
+      <div class="decision-zone" id="decision-zone" aria-live="polite">Maybe</div>
+      <div class="decision-message" id="decision-message" aria-live="polite"></div>
+    </div>
+
+    <!-- Factor Importance Insight -->
+    <div class="factor-insight-panel">
+      <div class="panel-title">Top Factors</div>
+      <div id="factor-insight" aria-label="Factor importance ranking"></div>
+    </div>
+
+    <div class="math-panel" style="padding: 16px 20px;">
+      <div class="math-toggle" onclick="toggleMath()" role="button" aria-expanded="false" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMath();}">
+        <h3>Mathematical Breakdown</h3>
+        <span class="arrow" id="math-arrow">&#9660;</span>
+      </div>
+      <div class="math-content" id="math-content">
+        <div id="math-inputs" class="math-block"></div>
+        <div id="math-hidden" class="math-block"></div>
+        <div id="math-output" class="math-block"></div>
+        <div class="af-card">
+          <h4>ReLU (Hidden Layer)</h4>
+          <code>f(x) = max(0, x)</code>
+          <p>Passes positive values, blocks negatives. Efficient non-linearity.</p>
+        </div>
+        <div class="af-card">
+          <h4>Sigmoid (Output Layer)</h4>
+          <code>f(x) = 1 / (1 + e<sup>&minus;x</sup>)</code>
+          <p>Squashes any value to 0&ndash;1 range, producing a probability.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Custom Scenario Modal -->
+<div class="modal-overlay" id="custom-modal" role="dialog" aria-modal="true" aria-label="Create custom scenario">
+  <div class="modal">
+    <h2>Create Custom Scenario</h2>
+    <div class="modal-field">
+      <label for="custom-title">Decision Title</label>
+      <input type="text" id="custom-title" placeholder="Should I quit my job?">
+    </div>
+    <div class="modal-field">
+      <label for="custom-emoji">Emoji</label>
+      <input type="text" id="custom-emoji" placeholder="&#129300;" maxlength="4" style="width:60px">
+    </div>
+    <div class="modal-field">
+      <label>Input Factors (Label + Description)</label>
+      <div id="custom-inputs-fields"></div>
+    </div>
+    <div class="modal-field">
+      <label for="custom-msg-high">High Confidence Message (&gt;70%)</label>
+      <input type="text" id="custom-msg-high" placeholder="Go for it!">
+    </div>
+    <div class="modal-field">
+      <label for="custom-msg-low">Low Confidence Message (&lt;30%)</label>
+      <input type="text" id="custom-msg-low" placeholder="Better not">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeCustomModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveCustomScenario()">Save Scenario</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
