@@ -25,65 +25,13 @@
 <!-- Main Layout -->
 <main class="app-main">
 
-  <!-- LEFT: Input Panel -->
-  <section class="panel input-panel" aria-label="Input controls">
-    <div class="panel-title">Input Layer</div>
-    <div id="sliders-container"></div>
-
-    <div class="demo-section">
-      <div class="panel-title">Demo Scenarios</div>
-      <div id="demo-buttons" role="group" aria-label="Demo scenario presets"></div>
-    </div>
-
-    <div class="controls-section">
-      <div class="panel-title">Controls</div>
-      <button class="ctrl-btn" id="btn-edit-weights" onclick="toggleEditWeights()" title="Toggle weight editing [E]">Edit Weights</button>
-      <button class="ctrl-btn" id="btn-undo" onclick="undoWeight()" disabled title="Undo weight change [Ctrl+Z]">Undo</button>
-      <button class="ctrl-btn" id="btn-redo" onclick="redoWeight()" disabled title="Redo weight change [Ctrl+Shift+Z]">Redo</button>
-      <button class="ctrl-btn" onclick="resetToProfile()" title="Reset weights to scenario defaults">Reset Weights</button>
-      <button class="ctrl-btn" onclick="randomizeWeights()" title="Randomize all weights">Randomize</button>
-      <button class="ctrl-btn" onclick="resetInputs()" title="Reset all inputs to defaults [R]">Reset Inputs</button>
-      <button class="ctrl-btn" id="btn-pause" onclick="togglePause()" title="Pause/resume signal particles [Space]">Pause Signals</button>
-      <div class="speed-control">
-        <label for="speed-slider">Speed</label>
-        <input type="range" min="0.2" max="3" step="0.1" value="1" id="speed-slider" oninput="setSpeed(this.value)"
-               aria-label="Animation speed" aria-valuemin="0.2" aria-valuemax="3">
-      </div>
-      <div class="keyboard-hints">
-        <span class="hint-key">E</span> Edit Weights
-        <span class="hint-key">R</span> Reset
-        <span class="hint-key">Space</span> Pause
-        <span class="hint-key">Ctrl+Z</span> Undo
-      </div>
-    </div>
-  </section>
-
   <!-- CENTER: Network Visualization -->
   <section class="panel network-panel" aria-label="Neural network visualization">
+    <button class="controls-toggle-btn" id="controls-toggle-btn" onclick="toggleControlsModal()" title="Open controls & heatmap [C]">
+      <span class="toggle-icon">&#9881;</span> Controls & Weights
+    </button>
     <svg id="network-svg" viewBox="0 0 700 440"></svg>
     <div class="weight-tooltip" id="weight-tooltip" role="tooltip"></div>
-    <div class="weight-editor" id="weight-editor" role="dialog" aria-label="Weight editor">
-      <button class="we-close" onclick="closeWeightEditor()" aria-label="Close weight editor">&times;</button>
-      <div class="we-title" id="we-title">Weight</div>
-      <div class="we-value" id="we-value">0.00</div>
-      <div class="we-controls">
-        <button onclick="adjustWeight(-0.1)" aria-label="Decrease weight by 0.1">&minus;</button>
-        <input type="number" id="we-input" step="0.05" min="-2" max="2" onchange="setWeight(this.value)" aria-label="Weight value">
-        <button onclick="adjustWeight(0.1)" aria-label="Increase weight by 0.1">+</button>
-      </div>
-      <div class="we-hint">Higher weight = stronger influence on decision</div>
-    </div>
-  </section>
-
-  <!-- BOTTOM CENTER: Heatmap -->
-  <section class="panel heatmap-panel" aria-label="Weight heatmap visualization">
-    <div class="panel-title">Weight Heatmap</div>
-    <div class="heatmap-container" id="heatmap-container"></div>
-    <div class="heatmap-legend" aria-label="Heatmap color scale: red means negative, blue means positive">
-      <span>&minus;2.0</span>
-      <div class="legend-bar"></div>
-      <span>+2.0</span>
-    </div>
   </section>
 
   <!-- RIGHT: Output + Math Panel -->
@@ -159,6 +107,77 @@
       <button class="btn-primary" onclick="saveCustomScenario()">Save Scenario</button>
     </div>
   </div>
+</div>
+
+<!-- Controls & Weights Modal -->
+<div class="controls-modal-overlay" id="controls-modal" role="dialog" aria-modal="true" aria-label="Controls and weight heatmap">
+  <div class="controls-modal">
+    <div class="controls-modal-header">
+      <h2>Controls & Weights</h2>
+      <button class="controls-modal-close" onclick="toggleControlsModal()" aria-label="Close controls modal">&times;</button>
+    </div>
+    <div class="controls-modal-body">
+
+      <!-- Input Panel -->
+      <section class="modal-input-panel" aria-label="Input controls">
+        <div class="panel-title">Input Layer</div>
+        <div id="sliders-container"></div>
+
+        <div class="demo-section">
+          <div class="panel-title">Demo Scenarios</div>
+          <div id="demo-buttons" role="group" aria-label="Demo scenario presets"></div>
+        </div>
+
+        <div class="controls-section">
+          <div class="panel-title">Controls</div>
+          <button class="ctrl-btn" id="btn-edit-weights" onclick="toggleEditWeights()" title="Toggle weight editing [E]">Edit Weights</button>
+          <button class="ctrl-btn" id="btn-undo" onclick="undoWeight()" disabled title="Undo weight change [Ctrl+Z]">Undo</button>
+          <button class="ctrl-btn" id="btn-redo" onclick="redoWeight()" disabled title="Redo weight change [Ctrl+Shift+Z]">Redo</button>
+          <button class="ctrl-btn" onclick="resetToProfile()" title="Reset weights to scenario defaults">Reset Weights</button>
+          <button class="ctrl-btn" onclick="randomizeWeights()" title="Randomize all weights">Randomize</button>
+          <button class="ctrl-btn" onclick="resetInputs()" title="Reset all inputs to defaults [R]">Reset Inputs</button>
+          <button class="ctrl-btn" id="btn-pause" onclick="togglePause()" title="Pause/resume signal particles [Space]">Pause Signals</button>
+          <div class="speed-control">
+            <label for="speed-slider">Speed</label>
+            <input type="range" min="0.2" max="3" step="0.1" value="1" id="speed-slider" oninput="setSpeed(this.value)"
+                   aria-label="Animation speed" aria-valuemin="0.2" aria-valuemax="3">
+          </div>
+          <div class="keyboard-hints">
+            <span class="hint-key">C</span> Toggle Panel
+            <span class="hint-key">E</span> Edit Weights
+            <span class="hint-key">R</span> Reset
+            <span class="hint-key">Space</span> Pause
+            <span class="hint-key">Ctrl+Z</span> Undo
+          </div>
+        </div>
+      </section>
+
+      <!-- Heatmap -->
+      <section class="modal-heatmap-panel" aria-label="Weight heatmap visualization">
+        <div class="panel-title">Weight Heatmap</div>
+        <div class="heatmap-container" id="heatmap-container"></div>
+        <div class="heatmap-legend" aria-label="Heatmap color scale: red means negative, blue means positive">
+          <span>&minus;2.0</span>
+          <div class="legend-bar"></div>
+          <span>+2.0</span>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- Weight Editor (global, floats above everything) -->
+<div class="weight-editor" id="weight-editor" role="dialog" aria-label="Weight editor">
+  <button class="we-close" onclick="closeWeightEditor()" aria-label="Close weight editor">&times;</button>
+  <div class="we-title" id="we-title">Weight</div>
+  <div class="we-value" id="we-value">0.00</div>
+  <div class="we-controls">
+    <button onclick="adjustWeight(-0.1)" aria-label="Decrease weight by 0.1">&minus;</button>
+    <input type="number" id="we-input" step="0.05" min="-2" max="2" onchange="setWeight(this.value)" aria-label="Weight value">
+    <button onclick="adjustWeight(0.1)" aria-label="Increase weight by 0.1">+</button>
+  </div>
+  <div class="we-hint">Higher weight = stronger influence on decision</div>
 </div>
 
 <script src="app.js"></script>

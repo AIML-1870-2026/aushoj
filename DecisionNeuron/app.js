@@ -23,6 +23,7 @@ const PRESETS = [
       biasH: [0.20, -0.10, 0.05, -0.15],
       biasO: -0.80,
     },
+    biasLabel: { hidden: 'Fan Enthusiasm', output: 'Couch Potato Tendency' },
     messages: { high: 'Watch the game! ⚽📺', probHigh: 'Leaning towards watching. Got a good feeling.', mid: "It's a toss-up. Go with your gut.", probLow: 'Probably not worth it tonight.', low: 'Skip it this time.' },
     demos: [
       { name: 'Perfect Match', emoji: '🎯', values: [95,85,90,60,70] },
@@ -52,6 +53,7 @@ const PRESETS = [
       biasH: [0.10, -0.05, 0.15, -0.10],
       biasO: -0.90,
     },
+    biasLabel: { hidden: 'Academic Optimism', output: 'Decision Hesitancy' },
     messages: { high: 'Enroll here! 🎓✨', probHigh: 'Strong contender. Schedule a visit.', mid: 'Worth considering. Visit the campus.', probLow: 'Probably not the one. Keep exploring.', low: 'Keep looking. 🔍' },
     demos: [
       { name: 'Dream School', emoji: '⭐', values: [95,80,90,60,85] },
@@ -80,6 +82,7 @@ const PRESETS = [
       biasH: [0.10, -0.15, 0.05, -0.10],
       biasO: -0.85,
     },
+    biasLabel: { hidden: 'Animal Instinct', output: 'Commitment Caution' },
     messages: { high: 'Bring them home! 🐕❤️', probHigh: 'Looking good! Prepare your home.', mid: 'Think it over a bit more.', probLow: 'Might want to wait a bit longer.', low: 'Not the right fit right now. 😔' },
     demos: [
       { name: 'Love at First Sight', emoji: '❤️', values: [98,75,65,70,85] },
@@ -108,6 +111,7 @@ const PRESETS = [
       biasH: [0.15, -0.10, 0.10, -0.05],
       biasO: -0.75,
     },
+    biasLabel: { hidden: 'Wanderlust', output: 'Homebody Tendency' },
     messages: { high: 'Hit the road! 🚗🛣️', probHigh: 'Looking promising. Start packing!', mid: 'Could go either way. Plan a bit more.', probLow: 'The timing feels off. Maybe next time.', low: 'Stay local this time. 🏠' },
     demos: [
       { name: 'Dream Destination', emoji: '🏔️', values: [95,80,85,70,75] },
@@ -136,6 +140,7 @@ const PRESETS = [
       biasH: [0.10, -0.08, 0.12, -0.12],
       biasO: -0.82,
     },
+    biasLabel: { hidden: 'Tech Curiosity', output: 'Buyer\'s Resistance' },
     messages: { high: 'Make the purchase! 💳💻', probHigh: 'Solid buy. Pull the trigger soon.', mid: 'Wait for a sale or compare more.', probLow: "Doesn't quite justify the cost yet.", low: 'Wait for a better time. ⏳' },
     demos: [
       { name: 'Must-Have Upgrade', emoji: '🔥', values: [90,75,85,80,88] },
@@ -565,7 +570,8 @@ function updateMath() {
       const w = weights.ih[i][j];
       parts.push(`(${inputs[i].toFixed(2)} × <span class="${w>=0?'pos':'neg'}">${w.toFixed(2)}</span>)`);
     }
-    hiddenHTML += parts.join(' + ') + ` + bias(${weights.biasH[j].toFixed(2)})\n`;
+    const hBiasName = sc.biasLabel?.hidden || 'bias';
+    hiddenHTML += parts.join(' + ') + ` + <span title="${hBiasName}">${hBiasName.toLowerCase()}(${weights.biasH[j].toFixed(2)})</span>\n`;
     hiddenHTML += `      = <span class="highlight">${rawSums.hidden[j].toFixed(3)}</span>\n`;
     hiddenHTML += `  ReLU = max(0, ${rawSums.hidden[j].toFixed(3)}) = <span class="highlight">${activations.hidden[j].toFixed(3)}</span>\n\n`;
   }
@@ -578,7 +584,8 @@ function updateMath() {
     const w = weights.ho[j];
     oParts.push(`(${activations.hidden[j].toFixed(3)} × <span class="${w>=0?'pos':'neg'}">${w.toFixed(2)}</span>)`);
   }
-  outHTML += oParts.join(' + ') + ` + bias(${weights.biasO.toFixed(2)})\n`;
+  const oBiasName = sc.biasLabel?.output || 'bias';
+  outHTML += oParts.join(' + ') + ` + <span title="${oBiasName}">${oBiasName.toLowerCase()}(${weights.biasO.toFixed(2)})</span>\n`;
   outHTML += `      = <span class="highlight">${rawSums.output.toFixed(3)}</span>\n\n`;
   outHTML += `  Sigmoid = 1 / (1 + e<sup>−${rawSums.output.toFixed(3)}</sup>)\n`;
   outHTML += `          = 1 / (1 + ${Math.exp(-rawSums.output).toFixed(4)})\n`;
@@ -625,9 +632,9 @@ function buildHeatmap() {
       cell.setAttribute('role', 'gridcell');
       cell.setAttribute('tabindex', '0');
       cell.setAttribute('aria-label', `${state.scenario.inputs[i].label} to H${j+1}`);
-      cell.addEventListener('click', () => openHeatmapEditor('ih', i, j));
+      cell.addEventListener('click', (e) => openHeatmapEditor('ih', i, j, e));
       cell.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHeatmapEditor('ih', i, j); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHeatmapEditor('ih', i, j, e); }
       });
       cell.addEventListener('mouseenter', () => highlightConn('ih', i, j));
       cell.addEventListener('mouseleave', clearHighlight);
@@ -666,9 +673,9 @@ function buildHeatmap() {
     cell.setAttribute('role', 'gridcell');
     cell.setAttribute('tabindex', '0');
     cell.setAttribute('aria-label', `H${j+1} to Output`);
-    cell.addEventListener('click', () => openHeatmapEditor('ho', j, 0));
+    cell.addEventListener('click', (e) => openHeatmapEditor('ho', j, 0, e));
     cell.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHeatmapEditor('ho', j, 0); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openHeatmapEditor('ho', j, 0, e); }
     });
     cell.addEventListener('mouseenter', () => highlightConn('ho', j, 0));
     cell.addEventListener('mouseleave', clearHighlight);
@@ -680,7 +687,8 @@ function buildHeatmap() {
   // Biases
   const sec3 = document.createElement('div');
   sec3.className = 'heatmap-section';
-  sec3.innerHTML = '<h4>Biases</h4>';
+  const biasLabel = state.scenario?.biasLabel?.hidden || 'Bias';
+  sec3.innerHTML = `<h4>Biases <span style="font-weight:normal;opacity:0.7;font-size:12px">— "${biasLabel}"</span></h4>`;
   const grid3 = document.createElement('div');
   grid3.className = 'heatmap-grid';
   grid3.style.gridTemplateColumns = '70px repeat(4, 48px)';
@@ -806,7 +814,7 @@ function onConnClick(e) {
   openWeightEditor(layer, +i, +j, e);
 }
 
-function openHeatmapEditor(layer, i, j) {
+function openHeatmapEditor(layer, i, j, event) {
   if (!state.ui.editWeights) return;
   state.ui.editingWeight = { layer, i, j };
   const ed = document.getElementById('weight-editor');
@@ -818,9 +826,24 @@ function openHeatmapEditor(layer, i, j) {
   document.getElementById('we-title').textContent = title;
   document.getElementById('we-value').textContent = w.toFixed(3);
   document.getElementById('we-input').value = w.toFixed(2);
-  ed.style.left = '50%';
-  ed.style.top = '50%';
-  ed.style.transform = 'translate(-50%, -50%)';
+
+  // Position near the clicked cell using viewport coords
+  if (event && event.target) {
+    const rect = event.target.getBoundingClientRect();
+    let left = rect.right + 8;
+    let top = rect.top;
+    // Keep within viewport
+    if (left + 180 > window.innerWidth) left = rect.left - 188;
+    if (top + 140 > window.innerHeight) top = window.innerHeight - 150;
+    ed.style.left = left + 'px';
+    ed.style.top = top + 'px';
+  } else {
+    ed.style.left = '50%';
+    ed.style.top = '50%';
+    ed.style.transform = 'translate(-50%, -50%)';
+    return;
+  }
+  ed.style.transform = 'none';
 }
 
 function openWeightEditor(layer, i, j, event) {
@@ -836,9 +859,13 @@ function openWeightEditor(layer, i, j, event) {
   document.getElementById('we-input').value = w.toFixed(2);
 
   const rect = event.target.getBoundingClientRect();
-  const panelRect = document.querySelector('.network-panel').getBoundingClientRect();
-  ed.style.left = (rect.left + rect.right) / 2 - panelRect.left - 90 + 'px';
-  ed.style.top = (rect.top + rect.bottom) / 2 - panelRect.top + 10 + 'px';
+  let left = (rect.left + rect.right) / 2 - 90;
+  let top = (rect.top + rect.bottom) / 2 + 10;
+  if (left + 180 > window.innerWidth) left = window.innerWidth - 190;
+  if (left < 10) left = 10;
+  if (top + 140 > window.innerHeight) top = window.innerHeight - 150;
+  ed.style.left = left + 'px';
+  ed.style.top = top + 'px';
   ed.style.transform = 'none';
 }
 
@@ -1122,6 +1149,11 @@ function resetInputs() {
   updateViz();
 }
 
+function toggleControlsModal() {
+  const modal = document.getElementById('controls-modal');
+  modal.classList.toggle('open');
+}
+
 function togglePause() {
   state.ui.paused = !state.ui.paused;
   const btn = document.getElementById('btn-pause');
@@ -1166,9 +1198,14 @@ function handleKeyboard(e) {
         redoWeight();
       }
       break;
+    case 'c':
+      e.preventDefault();
+      toggleControlsModal();
+      break;
     case 'escape':
       closeWeightEditor();
       closeCustomModal();
+      document.getElementById('controls-modal').classList.remove('open');
       break;
   }
 }
@@ -1304,6 +1341,11 @@ function init() {
 
   // Register keyboard shortcuts
   document.addEventListener('keydown', handleKeyboard);
+
+  // Close controls modal when clicking overlay background
+  document.getElementById('controls-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
 
   requestAnimationFrame(animateParticles);
 }
