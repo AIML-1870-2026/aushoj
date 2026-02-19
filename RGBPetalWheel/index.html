@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RGB Color Studio</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Hidden SVG color-blindness filters -->
+<svg id="cb-filters" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="protanopia">
+      <feColorMatrix type="matrix" values="
+        0.567 0.433 0     0 0
+        0.558 0.442 0     0 0
+        0     0.242 0.758 0 0
+        0     0     0     1 0"/>
+    </filter>
+    <filter id="deuteranopia">
+      <feColorMatrix type="matrix" values="
+        0.625 0.375 0   0 0
+        0.7   0.3   0   0 0
+        0     0.3   0.7 0 0
+        0     0     0   1 0"/>
+    </filter>
+    <filter id="tritanopia">
+      <feColorMatrix type="matrix" values="
+        0.95  0.05  0     0 0
+        0     0.433 0.567 0 0
+        0     0.475 0.525 0 0
+        0     0     0     1 0"/>
+    </filter>
+  </defs>
+</svg>
+
+<header>
+  <h1>RGB Color Studio</h1>
+  <button id="darkToggle">&#9728;&#65039; Light Mode</button>
+</header>
+
+<main>
+  <!-- ===== SPOTLIGHT EXPLORER ===== -->
+  <section id="spotlight-panel" aria-label="Spotlight Explorer">
+    <div class="panel-title">Spotlight Explorer</div>
+
+    <div id="canvasWrapper">
+      <canvas id="spotlightCanvas" width="800" height="500"></canvas>
+    </div>
+
+    <div class="sliders-container">
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Red</span>
+          <span class="slider-value" id="valR">255</span>
+        </div>
+        <input type="range" id="sliderR" min="0" max="255" value="255" aria-label="Red intensity">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Green</span>
+          <span class="slider-value" id="valG">255</span>
+        </div>
+        <input type="range" id="sliderG" min="0" max="255" value="255" aria-label="Green intensity">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>Blue</span>
+          <span class="slider-value" id="valB">255</span>
+        </div>
+        <input type="range" id="sliderB" min="0" max="255" value="255" aria-label="Blue intensity">
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button id="randomizeSpotlight">&#127922; Randomize</button>
+    </div>
+
+    <div class="mixed-display">
+      <div id="mixedSwatch" aria-hidden="true"></div>
+      <div class="mixed-info">
+        <small>Mixed Color</small>
+        <div id="mixedHex">#ffffff</div>
+      </div>
+      <button id="sendToPalette">Send to Palette &#8594;</button>
+    </div>
+  </section>
+
+  <!-- ===== PALETTE GENERATOR ===== -->
+  <section id="palette-panel" aria-label="Palette Generator">
+    <div class="panel-title">Palette Generator</div>
+
+    <div class="color-input-row">
+      <input type="color" id="colorPicker" value="#ff2200" aria-label="Base color picker">
+      <input type="text" id="hexInput" value="#ff2200" maxlength="7" aria-label="Hex color value">
+      <button id="copyPaletteColor">Copy</button>
+    </div>
+
+    <div class="harmony-row" role="group" aria-label="Harmony type">
+      <button class="harmony-btn active" data-harmony="complementary">Complementary</button>
+      <button class="harmony-btn" data-harmony="analogous">Analogous</button>
+      <button class="harmony-btn" data-harmony="triadic">Triadic</button>
+      <button class="harmony-btn" data-harmony="split-complementary">Split-Comp</button>
+      <button class="harmony-btn" data-harmony="tetradic">Tetradic</button>
+    </div>
+
+    <div class="actions-row">
+      <button id="randomize">&#127922; Randomize</button>
+    </div>
+
+    <div id="swatchContainer" role="list" aria-label="Color palette swatches"></div>
+
+    <div id="wheelWrapper">
+      <div class="panel-title">Color Wheel</div>
+      <div id="wheelContainer" aria-hidden="true">
+        <div id="wheelBg"></div>
+        <svg id="wheelSvg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <g id="wheelMarkers"></g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Accessibility Panel -->
+    <div id="accessPanel">
+      <button id="accessToggle" aria-expanded="false" aria-controls="accessContent">
+        <span>&#9855; Accessibility Tools</span>
+        <span id="accessArrow">&#9660;</span>
+      </button>
+      <div id="accessContent" role="region">
+        <div class="contrast-section">
+          <div class="section-subtitle">Contrast Checker (WCAG)</div>
+          <div class="contrast-pickers">
+            <select class="swatch-select" id="contrastC1" aria-label="First color for contrast check"></select>
+            <span aria-hidden="true">vs</span>
+            <select class="swatch-select" id="contrastC2" aria-label="Second color for contrast check"></select>
+          </div>
+          <div id="contrastResult" aria-live="polite"></div>
+        </div>
+        <div class="colorblind-section">
+          <div class="section-subtitle">Color Blindness Preview</div>
+          <div class="colorblind-btns" role="group" aria-label="Color blindness simulation">
+            <button class="cb-btn active" data-cb="none">Normal</button>
+            <button class="cb-btn" data-cb="protanopia">Protanopia</button>
+            <button class="cb-btn" data-cb="deuteranopia">Deuteranopia</button>
+            <button class="cb-btn" data-cb="tritanopia">Tritanopia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
