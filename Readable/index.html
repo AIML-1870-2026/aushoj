@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Readable — WCAG Color Contrast Explorer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <h1>Readable<span class="dot">.</span></h1>
+      <p>WCAG Color Contrast Explorer</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ═══ Controls Panel ═══════════════════════════════════════ -->
+    <div class="panel" id="controls-panel">
+      <p class="eyebrow">Controls</p>
+
+      <!-- Presets -->
+      <div class="cgroup">
+        <label class="clabel" for="presets">Quick Presets</label>
+        <div class="select-wrap">
+          <select id="presets">
+            <option value="">— Select a preset —</option>
+            <option value="high-contrast">High Contrast (Black / White)</option>
+            <option value="low-contrast">Low Contrast (Gray)</option>
+            <option value="classic-blue">Classic Blue / White</option>
+            <option value="fail-example">Fail Example (Yellow / White)</option>
+            <option value="dark-mode">Dark Mode</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Background + Text Color (side by side) -->
+      <div class="color-groups">
+        <div class="cgroup" id="bg-controls">
+          <div class="clabel-row">
+            <span class="clabel">Background</span>
+            <span class="swatch" id="bg-swatch" aria-hidden="true"></span>
+          </div>
+          <div class="rgb-row">
+            <span class="ch r" aria-label="Red channel">R</span>
+            <input type="range" class="slider" id="bg-r-s" min="0" max="255" value="255" aria-label="Background red">
+            <input type="number" class="numbox" id="bg-r-n" min="0" max="255" value="255" aria-label="Background red value">
+          </div>
+          <div class="rgb-row">
+            <span class="ch g" aria-label="Green channel">G</span>
+            <input type="range" class="slider" id="bg-g-s" min="0" max="255" value="255" aria-label="Background green">
+            <input type="number" class="numbox" id="bg-g-n" min="0" max="255" value="255" aria-label="Background green value">
+          </div>
+          <div class="rgb-row">
+            <span class="ch b" aria-label="Blue channel">B</span>
+            <input type="range" class="slider" id="bg-b-s" min="0" max="255" value="255" aria-label="Background blue">
+            <input type="number" class="numbox" id="bg-b-n" min="0" max="255" value="255" aria-label="Background blue value">
+          </div>
+        </div>
+
+        <div class="cgroup" id="text-controls">
+          <div class="clabel-row">
+            <span class="clabel">Text Color</span>
+            <span class="swatch" id="text-swatch" aria-hidden="true"></span>
+          </div>
+          <div class="rgb-row">
+            <span class="ch r" aria-label="Red channel">R</span>
+            <input type="range" class="slider" id="text-r-s" min="0" max="255" value="0" aria-label="Text red">
+            <input type="number" class="numbox" id="text-r-n" min="0" max="255" value="0" aria-label="Text red value">
+          </div>
+          <div class="rgb-row">
+            <span class="ch g" aria-label="Green channel">G</span>
+            <input type="range" class="slider" id="text-g-s" min="0" max="255" value="0" aria-label="Text green">
+            <input type="number" class="numbox" id="text-g-n" min="0" max="255" value="0" aria-label="Text green value">
+          </div>
+          <div class="rgb-row">
+            <span class="ch b" aria-label="Blue channel">B</span>
+            <input type="range" class="slider" id="text-b-s" min="0" max="255" value="0" aria-label="Text blue">
+            <input type="number" class="numbox" id="text-b-n" min="0" max="255" value="0" aria-label="Text blue value">
+          </div>
+        </div>
+      </div>
+
+      <!-- Font Size -->
+      <div class="cgroup">
+        <div class="clabel-row">
+          <span class="clabel">Font Size</span>
+          <span class="pill" id="size-display">18 px</span>
+        </div>
+        <div class="rgb-row">
+          <span class="ch" style="color:var(--muted); font-size:0.65rem; letter-spacing:0; font-weight:700;">Aa</span>
+          <input type="range" class="slider size-slider" id="size-s" min="10" max="72" value="18" aria-label="Font size">
+          <input type="number" class="numbox" id="size-n" min="10" max="72" value="18" aria-label="Font size in pixels">
+        </div>
+      </div>
+
+      <!-- Vision Simulation -->
+      <div class="cgroup no-border">
+        <span class="clabel" id="vision-label">Vision Simulation</span>
+        <div class="radio-list" role="radiogroup" aria-labelledby="vision-label">
+          <label class="radio-opt radio-full">
+            <input type="radio" name="vision" value="normal" checked>
+            <span class="radio-text">Normal Vision</span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="vision" value="protanopia">
+            <span class="radio-text">Protanopia <em>(red)</em></span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="vision" value="deuteranopia">
+            <span class="radio-text">Deuteranopia <em>(green)</em></span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="vision" value="tritanopia">
+            <span class="radio-text">Tritanopia <em>(blue)</em></span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="vision" value="monochromacy">
+            <span class="radio-text">Monochromacy <em>(gray)</em></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Preview Panel ════════════════════════════════════════ -->
+    <div class="panel" id="preview-panel">
+      <p class="eyebrow">Preview</p>
+
+      <!-- Text preview area -->
+      <div id="preview-box" role="region" aria-label="Text preview">
+        <p id="preview-text">
+          The quick brown fox jumps over the lazy dog.
+          Pack my box with five dozen liquor jugs.
+          Sphinx of black quartz, judge my vow.
+          How vividly the morning light reveals the true colors of the world.
+        </p>
+      </div>
+
+      <!-- Simulation notice -->
+      <div id="sim-note" class="sim-note hidden" role="status">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Vision simulation active — preview shows simulated perception. Sliders reflect actual values and are temporarily disabled.
+      </div>
+
+      <!-- Stats -->
+      <div id="stats">
+
+        <!-- Contrast Ratio -->
+        <div class="stat-card ratio-card">
+          <p class="stat-eyebrow">Contrast Ratio</p>
+          <div class="ratio-main">
+            <span id="ratio-value" class="ratio-value">21.00:1</span>
+            <div class="ratio-badges">
+              <span id="badge-normal" class="badge pass" aria-label="WCAG AA normal text">AA Normal ✓</span>
+              <span id="badge-large"  class="badge pass" aria-label="WCAG AA large text">AA Large ✓</span>
+            </div>
+          </div>
+          <!-- Visual scale -->
+          <div class="ratio-scale" aria-hidden="true">
+            <div id="ratio-track" class="ratio-track">
+              <div id="ratio-fill" class="ratio-fill"></div>
+              <div class="ratio-tick" style="--tick: calc(3 / 21 * 100%)"></div>
+              <div class="ratio-tick" style="--tick: calc(4.5 / 21 * 100%)"></div>
+              <div class="ratio-tick" style="--tick: calc(7 / 21 * 100%)"></div>
+            </div>
+            <div class="ratio-scale-labels">
+              <span>1:1</span>
+              <span style="position:absolute; left: calc(3 / 21 * 100%);">3:1</span>
+              <span style="position:absolute; left: calc(4.5 / 21 * 100%);">4.5:1</span>
+              <span style="position:absolute; left: calc(7 / 21 * 100%);">7:1</span>
+              <span style="margin-left:auto;">21:1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WCAG Details -->
+        <div class="stat-card">
+          <p class="stat-eyebrow">WCAG AA Details</p>
+          <div class="badge-rows">
+            <div class="badge-row">
+              <div class="badge-desc">
+                <span class="badge-title">Normal text</span>
+                <span class="badge-sub">&lt;24 px · requires 4.5:1</span>
+              </div>
+              <span id="badge-normal-detail" class="badge pass">✓ Pass</span>
+            </div>
+            <div class="badge-row">
+              <div class="badge-desc">
+                <span class="badge-title">Large text</span>
+                <span class="badge-sub">≥24 px · requires 3:1</span>
+              </div>
+              <span id="badge-large-detail" class="badge pass">✓ Pass</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Luminosity -->
+        <div class="stat-card lum-card">
+          <p class="stat-eyebrow">Relative Luminance</p>
+          <div class="lum-row">
+            <span class="lum-dot" id="bg-lum-dot"></span>
+            <span class="lum-key">Background</span>
+            <span class="lum-val mono" id="bg-lum">1.000</span>
+          </div>
+          <div class="lum-row">
+            <span class="lum-dot" id="text-lum-dot"></span>
+            <span class="lum-key">Text</span>
+            <span class="lum-val mono" id="text-lum">0.000</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
